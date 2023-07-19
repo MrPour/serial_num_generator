@@ -1,2 +1,6 @@
 # serial_num_generator
 a serial number generator depends on Java and redis
+use BusinessEnum to determine the business id, length, dateformat, beginning, the min size and the max size ;
+create serial code like pool：[QQ2023071900001, QQ2023071900002, QQ2023071900003,... 
+fetch one serial code at one time from the beginning and create new serial code when the size is less than the minimum
+fetch the first one，left：[QQ2023071900002, QQ2023071900003, QQ2023071900004,...
