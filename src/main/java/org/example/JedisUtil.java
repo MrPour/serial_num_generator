@@ -1,15 +1,20 @@
 package org.example;
 
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
+import java.io.IOException;
 import java.util.*;
 
 public class JedisUtil
 {
     private static JedisPool jedisPool = null;
     private static final JedisUtil jedisUtil = new JedisUtil();
+
+    private static ObjectMapper jsonSerializer = new ObjectMapper();
     //单例模式
     private JedisUtil() {
         ResourceBundle properties = ResourceBundle.getBundle("redis");
@@ -81,7 +86,7 @@ public class JedisUtil
      * @param value
      * @param timeOut 秒
      */
-    public void set(String key,String value,int timeOut){
+    public void setnx(String key,String value,int timeOut){
         Jedis jedis = getJedis();
         if(0!=jedis.setnx(key, value)){
             jedis.expire(key, timeOut);
@@ -90,209 +95,55 @@ public class JedisUtil
     }
 
     /**
-     * 设置永不过期的键值对
+     * 添加一个键值对添加完成以后设置键的有效期
      * @param key
      * @param value
+     * @param timeOut 秒
      */
-    public void set(String key,String value){
+    public void set(String key,String value,int timeOut){
         Jedis jedis = getJedis();
         jedis.set(key,value);
+        jedis.expire(key, timeOut);
         returnJedis(jedis);
     }
-
 
     /**
      * 获取一个键值对
      * @param key
      * @return
      */
-    public String get(String key){
+    public <T>T getObjectByKey(String key,Class<T> classType){
         Jedis jedis = getJedis();
-        returnJedis(jedis);
-        return jedis.get(key);
-    }
-
-    /**
-     * 添加sorted set
-     *
-     * @param key
-     * @param value
-     * @param score
-     */
-    public void zadd(String key, String value, double score) {
-        Jedis jedis = getJedis();
-        jedis.zadd(key, score, value);
-        returnJedis(jedis);
-    }
-
-    /**
-     * 返回指定位置的集合元素,0为第一个元素，-1为最后一个元素
-     * @param key
-     * @param start
-     * @param end
-     * @return
-     */
-    public Set<String> zrange(String key, int start, int end) {
-        Jedis jedis = getJedis();
-        Set<String> set = jedis.zrange(key, start, end);
-        returnJedis(jedis);
-        return set;
-    }
-
-    /**
-     * 获取给定区间的元素，原始按照权重由高到低排序
-     * @param key
-     * @param start
-     * @param end
-     * @return
-     */
-    public Set<String> zrevrange(String key, int start, int end) {
-        Jedis jedis = getJedis();
-        Set<String> set = jedis.zrevrange(key, start, end);
-        returnJedis(jedis);
-        return set;
-    }
-
-    /**
-     * 添加对应关系，如果对应关系已存在，则覆盖
-     *
-     * @param key
-     * @param map 对应关系
-     * @return 状态，成功返回OK
-     */
-    public String hmset(String key, Map<String, String> map) {
-        Jedis jedis = getJedis();
-        String s = jedis.hmset(key, map);
-        returnJedis(jedis);
-        return s;
-    }
-
-    /**
-     * 向List头部追加记录
-     *
-     * @param key
-     * @param value
-     * @return 记录总数
-     */
-    public long rpush(String key, String value) {
-        Jedis jedis = getJedis();
-        long count = jedis.rpush(key, value);
-        returnJedis(jedis);
-        return count;
-    }
-
-    /**
-     * 向List头部追加记录
-     *
-     * @param key
-     * @param value
-     * @return 记录总数
-     */
-    private long rpush(byte[] key, byte[] value) {
-        Jedis jedis = getJedis();
-        long count = jedis.rpush(key, value);
-        returnJedis(jedis);
-        return count;
-    }
-
-    /**
-     * 删除
-     *
-     * @param key
-     * @return
-     */
-    public long del(String key) {
-        Jedis jedis = getJedis();
-        long s = jedis.del(key);
-        returnJedis(jedis);
-        return s;
-    }
-
-    /**
-     * 从集合中删除成员
-     * @param key
-     * @param value
-     * @return 返回1成功
-     * */
-    public long zrem(String key, String... value) {
-        Jedis jedis = getJedis();
-        long s = jedis.zrem(key, value);
-        returnJedis(jedis);
-        return s;
-    }
-
-    public void saveValueByKey(int dbIndex, byte[] key, byte[] value, int expireTime)
-            throws Exception {
-        Jedis jedis = null;
-        boolean isBroken = false;
+        T value = null;
         try {
-            jedis = getJedis();
-            jedis.select(dbIndex);
-            jedis.set(key, value);
-            if (expireTime > 0) {
-                jedis.expire(key, expireTime);
+            if(jedis.exists(key))
+            {
+                String s = jedis.get(key);
+                value = jsonSerializer.readValue(s, classType);
             }
-        } catch (Exception e) {
-            isBroken = true;
-            throw e;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         } finally {
-            returnResource(jedis, isBroken);
+            returnJedis(jedis);
         }
-    }
-
-    public byte[] getValueByKey(int dbIndex, byte[] key) throws Exception {
-        Jedis jedis = null;
-        byte[] result = null;
-        boolean isBroken = false;
-        try {
-            jedis = getJedis();
-            jedis.select(dbIndex);
-            result = jedis.get(key);
-        } catch (Exception e) {
-            isBroken = true;
-            throw e;
-        } finally {
-            returnResource(jedis, isBroken);
-        }
-        return result;
-    }
-
-    public void deleteByKey(int dbIndex, byte[] key) throws Exception {
-        Jedis jedis = null;
-        boolean isBroken = false;
-        try {
-            jedis = getJedis();
-            jedis.select(dbIndex);
-            jedis.del(key);
-        } catch (Exception e) {
-            isBroken = true;
-            throw e;
-        } finally {
-            returnResource(jedis, isBroken);
-        }
-    }
-
-    public void returnResource(Jedis jedis, boolean isBroken) {
-        if (jedis == null) {
-            return;
-        }
-        if (isBroken) {
-            jedisPool.returnBrokenResource(jedis);
-        } else {
-            jedisPool.returnResource(jedis);
-        }
+        return  value;
     }
 
     /**
-     * 获取总数量
+     * 获取一个键值对
      * @param key
      * @return
      */
-    public long zcard(String key) {
+    public void setObjectByKey(String key,Object obj,int millisecond){
         Jedis jedis = getJedis();
-        long count = jedis.zcard(key);
-        returnJedis(jedis);
-        return count;
+        try {
+            String value = jsonSerializer.writeValueAsString(obj);
+            this.set(key,value,millisecond);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            returnJedis(jedis);
+        }
     }
 
     /**
@@ -320,38 +171,6 @@ public class JedisUtil
         return result;
     }
 
-    /**
-     * 设置失效时间
-     * @param key
-     * @param seconds
-     */
-    public void expire(String key, int seconds) {
-        Jedis jedis = getJedis();
-        jedis.expire(key, seconds);
-        returnJedis(jedis);
-    }
-
-    /**
-     * 删除失效时间
-     * @param key
-     */
-    public void persist(String key) {
-        Jedis jedis = getJedis();
-        jedis.persist(key);
-        returnJedis(jedis);
-    }
-
-    /**
-     * 返回指定key序列值
-     * @param key
-     * @return
-     */
-    public long incr(String key){
-        Jedis jedis = getJedis();
-        long l = jedis.incr(key);
-        returnJedis(jedis);
-        return l;
-    }
 
     public static void main(String[] args) {
         System.out.println(JedisUtil.getInstance().currentTimeSecond());

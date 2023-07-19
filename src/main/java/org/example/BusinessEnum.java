@@ -7,7 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum BusinessEnum
 {
-    QQ("QQ","yyyyMMdd",5,1,100,10),;
+    QQ("QQ","yyyyMMdd",5,1,100,30),;
     /**
      * 单号前缀
      * 为空时填""
@@ -39,6 +39,11 @@ public enum BusinessEnum
      * 号码池容量的临界值
      */
     private Integer minPoolSize;
-
-
+    /**
+     * 获取流水号的索引
+     */
+    public int getSerialNumberIndex()
+    {
+        return this.getPrefix().length() + this.getDatePattern().length();
+    }
 }
