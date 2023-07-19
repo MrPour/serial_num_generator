@@ -11,4 +11,4 @@ if the size is less than the min size threshold, then it will create new serial 
 ex:   fetch the first one and crate QQ2023071900101, QQ2023071900102] in the end;
 
 point 2:
-when you fetch the code at first of a new day, the codes of yeaterday will be clear
+when you fetch the code at first of a new day, the codes of yesterday will be cleared
