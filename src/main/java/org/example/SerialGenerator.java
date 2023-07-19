@@ -11,12 +11,12 @@ public class SerialGenerator
     public static String makeSerialNum(BusinessEnum businessEnum){
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(businessEnum.getDatePattern());
-        String currentDate = formatter.format(LocalDateTime.now());
+        String today = formatter.format(LocalDateTime.now());
         StringBuffer prefix = new StringBuffer();
         prefix.append(businessEnum.getPrefix());
-        prefix.append(currentDate);
+        prefix.append(today);
         //生成号码池
-        CreateSerialPool(prefix.toString(),businessEnum,currentDate);
+        CreateSerialPool(prefix.toString(),businessEnum,today);
         //取号
         String SerialNum = FetchCodeFromRedis(businessEnum.getPrefix());
         return SerialNum;
@@ -32,10 +32,10 @@ public class SerialGenerator
             //清空旧数据
             if (redis.exists(key)) {
                 list = redis.getObjectByKey(key, ArrayList.class);
-                //当前列表中的最后一个元素不包含今天的日期，那么就是旧数据，全部删除
+                //每天第一次使用会把前一天的编号池清空
                 if (!list.get(list.size() - 1).toString().contains(currentDate)) {
                     list.clear();
-                    System.out.println("旧数据清理...");
+                    System.out.println("前一天的数据正在清理...");
                 }
             }
 
