@@ -7,7 +7,7 @@ use BusinessEnum to define the parameters like business id, length, dateformat, 
 
 create serial code like pool：[QQ2023071900001, QQ2023071900002, QQ2023071900003,... <br/>
 
-fetch one serial code at one time from the beginning <br>
+fetch one serial code at one time from the beginning <br/>
 
 ex: fetch the first one，left：[QQ2023071900002, QQ2023071900003, QQ2023071900004,...<br/>
 
