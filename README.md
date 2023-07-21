@@ -19,4 +19,4 @@ ex:   fetch the first one and crate QQ2023071900101, QQ2023071900102] in the end
 
 point 2:  
 
-when you fetch the code at first of a new day, the codes of yesterday will be cleared<br/>
+when you fetch the code at first of a new day, the codes of yesterday will be all cleared at once 
