@@ -3,11 +3,11 @@ a serial number generator depends on Java and redis<br/>
 
 General  
 
-use BusinessEnum to define the parameters like business id, length, dateformat, beginning, the min size and the max size ;  
+<1> use BusinessEnum to define the parameters like business id, length, dateformat, beginning, the min size and the max size ;  
 
-create serial code like pool：[QQ2023071900001, QQ2023071900002, QQ2023071900003,...   
+<2> create serial code like pool：[QQ2023071900001, QQ2023071900002, QQ2023071900003,...   
 
-fetch one serial code at one time from the beginning <br/>
+<3> fetch one serial code at one time from the beginning <br/>
 
 ex: fetch the first one，left：[QQ2023071900002, QQ2023071900003, QQ2023071900004,...  
 
